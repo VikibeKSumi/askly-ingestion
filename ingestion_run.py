@@ -1,20 +1,33 @@
 
+import boto3
+from pinecone import Pinecone
+import os
+from dotenv import load_dotenv
+load_dotenv()
+import time
+import logging
+from rich.logging import RichHandler
+
+from ingestion.ingestion import AsklyIngestion
+from ingestion.upsert import UpsertRecords
+from ingestion.records import BuildRecords
+from ingestion.get_index import get_index
+from config.config import config
+
+
+file_handler = logging.FileHandler("app.log", mode="a", encoding="utf-8")
+file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+logging.basicConfig(
+        level=logging.INFO,
+        format="%(name)s: %(message)s", 
+        handlers=[RichHandler(), file_handler]
+    )
+logger = logging.getLogger(__name__)
+
 
 if __name__ == "__main__":
     try:
-        import boto3
-        from pinecone import Pinecone
-        import os
-        from dotenv import load_dotenv
-        load_dotenv()
-        import time
-
-        from ingestion.ingestion import AsklyIngestion
-        from ingestion.upsert import UpsertRecords
-        from ingestion.records import BuildRecords
-        from ingestion.get_index import get_index
-        from config.config import config
-
+        
         DENSE_MODEL_NAME = config.DENSE_MODEL_NAME
         SPARSE_MODEL_NAME = config.SPARSE_MODEL_NAME
         BUCKET_NAME = config.BUCKET_NAME
@@ -53,6 +66,6 @@ if __name__ == "__main__":
         )
 
         ingestion.run_ingestion()
-        print("Ingestion successful.")
+        logger.info("Ingestion successful")
     except Exception as e:
-        print(f"{e}")
+        logger.exception(f"Ingestion failed: {e}")
